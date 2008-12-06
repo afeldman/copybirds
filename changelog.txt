@@ -1,0 +1,41 @@
+
+
+2008-12-02 (Version 0.8.5.1)
+  Version for initial sourceforge svn inport
+  Spelling fixes
+  Changing program prefixes from copy_ to cb_
+
+TODO:
+  More Encapsulation
+  Support fchdir
+  Avoid using GNU extension
+
+2008-10-15 (Version 0.8.5)
+  Version 0.8.4 has already encapsulated share/xmlhelper.c functions.
+  The error check of chdir turned out to be already implemented in Alpha 1...
+  Some additional error checking
+  Much more documentation
+
+2008-10-13, (Version 0.8.4, inital SVN import)
+  Typo fixes
+  ./export.sh script added
+  Lot of documentation
+  Lots of nullpointer checks added
+  Increase maximum description length
+
+TODO:
+  Encapsulate
+  Error check on chdir
+
+2008-09-23, Beta 1 (Version 0.8.0) (This version is on the official DVD of my BA work)
+  Improve package filtering
+  Improve .bashrc handling
+  All importand TODOs done
+  Some basic testing
+  Source code cleanup
+
+2008-09-20, Alpha 1:
+  All basic functions are working 
+
+
+-End of file-

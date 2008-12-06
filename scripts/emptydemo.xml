@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!-- XML Encoding see: http://de.wikipedia.org/wiki/Xml -->
+<content>
+  <filelist>
+    <!--Copies the file /etc/services. You have to set a PID.-->
+    <!--<file name="/etc/services" pid="1"/> -->
+
+    <!--Copies the content of /boot/grup including all subdirectories. For wildcards only /* as ending is allowed-->
+    <!--<file name="/boot/grub/*" pid="1"/>-->
+  </filelist>
+  <blacklist>
+    <!--Prevents the file /etc/services from inclusion. The blacklist will always overhelm the filelist.-->
+    <!--<file name="/etc/services"/>-->
+
+    <!--Prevents all files and directories from inclusion, where the path begins with /home. So /homedir would be blocked aswell. Wildcards are only allowed as ending.-->
+    <!--<file name="/home*"/>-->
+
+    <!--You might be interested to add the folowing to the blacklist-->
+    <!--
+    <file name="/var/cache/*"/>
+    <file name="/etc/passwd"/>
+    <file name="/etc/mtab"/>
+    <file name="/etc/fstab"/>
+    -->
+  </blacklist>
+</content>
