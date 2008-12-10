@@ -12,6 +12,7 @@ all:
 	gcc -c datamanager.c $(COMPFLAGS)
 	gcc -c $(PGMAIN).c $(COMPFLAGS)
 	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAG)
+	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 
 removebackups:

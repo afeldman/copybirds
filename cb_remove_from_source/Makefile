@@ -11,6 +11,7 @@ FILES=$(PGMAIN).o ../share/tools.o ../share/dirtools.o
 all:
 	gcc -c $(PGMAIN).c $(COMPFLAGS)
 	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAGS)
+	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 
 removebackups:

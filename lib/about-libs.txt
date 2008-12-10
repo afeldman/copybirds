@@ -1,0 +1,25 @@
+The libs, written by external authors and included here are:
+pathconvert
+c-algorithms-1.1.0
+
+pathconvert is a lib, copyrighted by Shigio Yamaguchi and Tama Communications Corporation.
+The library contains various source code files under different licenses. The not-needed
+files are removed here.
+The files which are included here are under the LGPL, please note that they are available
+under additional licenses in the original package.
+The sourcecode files and documentation files were not modified, but the Makefile has been
+rewritten.
+For all files of the lib and possible other licenses, please see:
+http://www.tamacom.com/pathconvert.html
+
+c-algorithms-1.1.0 is a lib, copyrighted by Simon Howard. See COPYING file in the
+c-algorithms-1.1.0 directory for terms of use. The lib is modified in the following way:
+Non needed (documentation, testing and sourcecode) files were removed. The Makefile has been
+replaced by a self-written version. All remaining files are NOT modified.
+For the full project including all files see:
+http://sourceforge.net/projects/c-algorithms/
+
+
+
+
+

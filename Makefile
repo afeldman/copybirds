@@ -21,6 +21,7 @@ removebackups:
 	make -C cb_files removebackups
 	make -C cb_strace_to_xml removebackups
 	make -C scripts removebackups
+	make -C lib removebackups
 	rm -f *~
 
 clean:

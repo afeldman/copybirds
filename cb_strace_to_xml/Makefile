@@ -17,6 +17,7 @@ all:
 	gcc -c dlist.c $(COMPFLAGS)
 	gcc -c connectionmanager.c $(COMPFLAGS)
 	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAG)
+	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 
 removebackups:

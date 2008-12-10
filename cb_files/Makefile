@@ -13,6 +13,7 @@ all:
 	gcc -c datamanager.c $(COMPFLAGS)
 	gcc -c cloner.c $(COMPFLAGS)
 	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAGS)
+	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 
 removebackups:

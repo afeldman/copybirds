@@ -12,6 +12,7 @@ all:
 	gcc -c $(PGMAIN).c $(COMPFLAGS)
 	gcc -c merger.c $(COMPFLAGS)
 	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAGS)
+	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 
 removebackups:
