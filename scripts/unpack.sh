@@ -23,15 +23,16 @@ if [ "$1" != "" ] ; then
 
 if [ "$1" == "--help" ] || [ "$1" == "-help" ] || [ "$1" == "-h" ]; then
 echo "This will extract the archive and integrate it into your system."
-echo "You may use one of the following options as FIRST parameter:"
+echo "You may use ONE of the following options as FIRST parameter:"
 echo "--show to display the depended packages."
 echo "--installdepend to run the sudo apt-get install <packagenames>."
 echo "--localtemp to do the extraction part in the directory where you are currently"
 echo "  this may be useful to save RAM on a live-CD by using an USB stick."
 echo "If no parameter is given, the application will be extracted"
 echo "  and integrated creating the temporary directory in your home dir."
-echo "Using --keeptemp as first or second parameter does not delete the"
-echo "  temporary directory at the end of the script."
+echo "The following parameters may be used as first or second parameter:"
+echo "--keeptemp prevents the temporary directory from deletion."
+echo "--extractonly only extracts the archive, without integration".
 exit 0
 elif [ "$1" == "--show" ] ; then
 echo "$ARCHIVENAME: Depending packages are: '__DEPPACKAGES__'"
@@ -95,6 +96,12 @@ tar xvf application.tar >/dev/null
 checkerr
 
 rm application.tar
+
+if [ "$1" != "--extractonly" ] && [ "$2" != "--extractonly" ] ; then
+echo "$ARCHIVENAME: Done."
+exit 0
+
+fi
 
 #move tools outside of TEMPTARGET, to prevent copying into the system
 
