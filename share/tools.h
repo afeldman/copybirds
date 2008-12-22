@@ -8,7 +8,7 @@
 //enable use if the special terminal characters make problems
 //#define NOCOLOR
 
-#define PGNVERSION "0.8.6"
+#define PGNVERSION "0.8.7"
 
 
 void message(int level, const char * format, ...);

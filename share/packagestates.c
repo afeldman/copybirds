@@ -174,13 +174,21 @@ int package_states_read(const char * filepath) {
 			if (state == 4) {
 				if (strstr(status, "not-installed") != NULL) { //if not "not-installed"
 					package_add(pname, version, 0);
+					message(4, "read_package_states: '%s' is not installed\n", pname);
 				} else if (strstr(status, "installed") != NULL) {
+					message(4, "read_package_states: '%s' is installed\n", pname);
 					//part of "not-installed"...
 					package_add(pname, version, 1);
 				} else if (strstr(status, "config-files") != NULL) { //
+					message(4, "read_package_states: '%s' has config-files\n", pname);
 					package_add(pname, version, 0);
+				} else if (strstr(status, "deinstall") != NULL) { //
+					message(4, "read_package_states: '%s' is deinstalled\n", pname);
+					package_add(pname, version, 0);
+				} else {
+					message(4, "read_package_states: '%s' has an unknown status\n", pname);
 				}
-				//second parameter is unimportatn
+				//second parameter is unimportant
 				state = read_package_states_smachine(state, 0);
 			}
 			free(line);

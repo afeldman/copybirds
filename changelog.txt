@@ -1,3 +1,7 @@
+SVN current (Version 0.8.7)
+  Typo fixes
+  Add a warning in cb_meta if a package is available but not installed
+
 2008-12-22 (Version 0.8.6)
   First sourceforge release
   Fixing --extractonly
@@ -41,7 +45,7 @@ TODO:
   Source code cleanup
 
 2008-09-20, Alpha 1:
-  All basic functions are working 
+  All basic functions are working
 
 
 -End of file-

@@ -354,14 +354,14 @@ int compare_stringversions(char * source, char * dest,
 Checks for the package name and version number if they are available on the
 current system */
 void package_found(xmlNodePtr child) {
-	message(4, "package_found: enterning\n");
+	message(4, "package_found: entering\n");
 	char * pname = xml_get_attribute(child, "name");
+	pstore_t * pack = package_get(pname);
 	if (pname != NULL) {
 		//now get version from XML
 		char * xversion = xml_get_content(child, "version");
 		if (xversion != NULL) {
 			//Get version from database
-			pstore_t * pack = package_get(pname);
 			if (pack != NULL) {
 				if (pack->version != NULL) {
 					compare_stringversions(xversion, pack->version, pname, 1);
@@ -369,14 +369,20 @@ void package_found(xmlNodePtr child) {
 					message(1, "compare_packages: Warning: '%s' has no version\
  information stored in the dpkg database\n", pname);
 				}
-			} else {
-				message(1, "compare_packages: Error: Needed package '%s' does not\
- exists on the current system\n", pname);
 			}
 			free(xversion);
 		} else {
 			message(1, "compare_packages: Warning: Package '%s' has no version \
 information stored in the XML file.\n", pname);
+		}
+		if (pack != NULL) {
+			if (pack->installed != 1) {
+				message(1, "compare_packages: Warning: Package '%s' is not installed \
+right now.\n", pname);
+			}
+		} else {
+			message(1, "compare_packages: Error: Needed package '%s' does not\
+ exists on the current system\n", pname);
 		}
 	}
 	free(pname);

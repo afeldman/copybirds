@@ -1,10 +1,11 @@
+------------ This version is from the SVN trunk, please use an official release instead-----
 (c) 2008 by Malte Marwedel m.marwedel AT onlinehome DOT de
 COPYBIRDS, Copy binaries runtime data surrounding
 http://copybirds.sourceforge.net
 Terms of Use: GPL Version 2 or later
 
 ============ Howto compile ===============================
-On a fresh Kubuntu 7.04 Live-CD the following three packages and its dependencies have to be installed before compiling works:
+On a fresh Kubuntu 7.04 (Ubuntu 8.10 too) Live-CD the following three packages and its dependencies have to be installed before compiling works:
 libc6-dev, libxml2-dev, freeglut3-dev
 
 run
@@ -40,9 +41,14 @@ cb_remove_from_source: Deletes files on the target system if a self-extracting a
 cb_strace_to_xml: Converts the output of strace to a suitable xml representation
 cb_trace_program.sh: Calls strace, cb_strace_to_xml and cb_meta_check with proper parameters
 
+=========== Versions ===================================
+Please read changelog.txt to see the current version number.
+Note: Odd versions will be the current code from the SVN between releases. Even versions will be releases.
+Example: 0.8.6: Is a release, 0.8.7 is the current developer code in the SVN which will end in the next release 0.8.8
+
 =========== Troubleshooting on special machines ==========
 The programs use escape sequences to generate color output in the console.
-If you get problems with them, go to the file share/tools.h and define the preprocessor variable NOCOLOR_H. After doing so, please re-compile.
+If you get problems with them, go to the file share/tools.h and define the preprocessor variable NOCOLOR. After doing so, please re-compile.
 http://linuxgazette.net/issue65/padala.html
 
 =========== Other things =================================
