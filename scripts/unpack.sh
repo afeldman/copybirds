@@ -41,7 +41,7 @@ elif [ "$1" == "--installdepend" ] ; then
 echo "$ARCHIVENAME: I will install all given dependency packages now"
 sudo apt-get install __DEPPACKAGES__
 exit 0
-elif [ "$1" != "--localtemp" ] && [ "$1" != "--keeptemp" ] ; then
+elif [ "$1" != "--localtemp" ] && [ "$1" != "--keeptemp" ] && [ "$1" != "--extractonly" ]; then
 #just check if the given parameter $1 contains some valid parameter
 echo "$ARCHIVENAME: Error: Parameter '$1' is not known"
 exit 1
@@ -49,7 +49,7 @@ fi
 
 fi
 
-if  [ "$2" != "" ] && [ "$2" != "--keeptemp" ] ; then
+if  [ "$2" != "" ] && [ "$2" != "--keeptemp" ] && [ "$2" != "--extractonly" ] ; then
 echo "$ARCHIVENAME: Error: Parameter '$2' is not known as second parameter"
 exit 1
 fi
@@ -97,7 +97,7 @@ checkerr
 
 rm application.tar
 
-if [ "$1" != "--extractonly" ] && [ "$2" != "--extractonly" ] ; then
+if [ "$1" == "--extractonly" ] || [ "$2" == "--extractonly" ] ; then
 echo "$ARCHIVENAME: Done."
 exit 0
 

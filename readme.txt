@@ -1,5 +1,3 @@
------------- This version is from the SVN trunk, please use an official release instead-----
-
 (c) 2008 by Malte Marwedel m.marwedel AT onlinehome DOT de
 COPYBIRDS, Copy binaries runtime data surrounding
 http://copybirds.sourceforge.net
@@ -12,9 +10,6 @@ libc6-dev, libxml2-dev, freeglut3-dev
 run
   make
 in this directory.
-If you encounter problems, you might need to run
-  ./configure
-in the directory lib/c-algorithms-1.1.0
 
 After compiling, make the content of bin available in your $PATH variable
 This may work with:

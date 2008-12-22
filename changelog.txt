@@ -1,7 +1,10 @@
+2008-12-22 (Version 0.8.6)
+  First sourceforge release
+  Fixing --extractonly
+  Adding createSrcRelease.sh
 
 2008-12-02 (Version 0.8.5.2)
   Adding --extractonly option
-
 
 2008-12-02 (Version 0.8.5.1)
   Version for initial sourceforge svn inport
