@@ -3,14 +3,15 @@
 PGMAIN=copycompare
 PGN=cb_remove_from_source
 
-COMPFLAGS= -Wall -Wextra -O2 -ggdb
+COMPFLAGS= -Wall -Wextra -std=gnu99 -pedantic -O2 -ggdb
 LIBS=../lib/libpathconvert.a
 CFLAGS=
 FILES=$(PGMAIN).o ../share/tools.o ../share/dirtools.o
+COMPILER=gcc
 
 all:
-	gcc -c $(PGMAIN).c $(COMPFLAGS)
-	gcc -o $(PGN) $(FILES) $(LIBS) $(CFLAGS)
+	$(COMPILER) -c $(PGMAIN).c $(COMPFLAGS)
+	$(COMPILER) -o $(PGN) $(FILES) $(LIBS) $(CFLAGS)
 	../createdir.sh ../bin
 	cp $(PGN) ../bin/$(PGN)
 

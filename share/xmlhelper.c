@@ -1,7 +1,10 @@
 /*(c) 2008 by Malte Marwedel
 This code may be used under the terms of the GPL version 2.
 */
+
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <string.h>
 
@@ -49,7 +52,7 @@ xmlChar * xml_cleanutf8(const char * key) {
 		message(4, "xml_cleanutf8: Warning: '%s' is not utf-8 encoded\n", key);
 		int ilen = strlen(key);
 		int olen = ilen*4; //four bits for one char should be the worst case
-		unsigned char * outbuf = calloc(olen+1, sizeof(char));
+		unsigned char * outbuf = (unsigned char *) calloc(olen+1, sizeof(char));
 		isolat1ToUTF8(outbuf, &olen, (unsigned char *) key, &ilen);
 		if (!xmlCheckUTF8(outbuf)) {
 			message(1, "xml_cleanutf8: Error: Converting '%s' to utf-8 failed\n", key);
@@ -70,7 +73,7 @@ char * xmlchar_to_char(xmlChar * xtext) {
 		message(4, "xmlchar_to_char Converting sting to iso\n");
 		int ilen = xmlStrlen(xtext);
 		int olen = ilen;
-		text = calloc(olen+1, sizeof(char));
+		text = (char *)calloc(olen+1, sizeof(char));
 		UTF8Toisolat1((unsigned char *) text, &olen, xtext, &ilen);
 	} else
 		text = strdup((char *)xtext);

@@ -1,34 +1,34 @@
 
 /*
- 
+
 Copyright (c) 2005, Simon Howard
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions 
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
 are met:
 
- * Redistributions of source code must retain the above copyright 
+ * Redistributions of source code must retain the above copyright
    notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright 
-   notice, this list of conditions and the following disclaimer in 
-   the documentation and/or other materials provided with the 
+ * Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
    distribution.
- * Neither the name of the C Algorithms project nor the names of its 
-   contributors may be used to endorse or promote products derived 
+ * Neither the name of the C Algorithms project nor the names of its
+   contributors may be used to endorse or promote products derived
    from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 */
@@ -45,12 +45,12 @@ ArrayList *arraylist_new(int length)
 	ArrayList *new_arraylist;
 
 	/* If the length is not specified, use a sensible default */
-	
+
 	if (length <= 0) {
 		length = 16;
 	}
-	
-	/* Allocate the new ArrayList and fill in the fields.  There are 
+
+	/* Allocate the new ArrayList and fill in the fields.  There are
 	 * initially no entries. */
 
 	new_arraylist = (ArrayList *) malloc(sizeof(ArrayList));
@@ -58,13 +58,13 @@ ArrayList *arraylist_new(int length)
 	if (new_arraylist == NULL) {
 		return NULL;
 	}
-	
+
 	new_arraylist->_alloced = length;
 	new_arraylist->length = 0;
 
 	/* Allocate the data array */
-
-	new_arraylist->data = malloc(length * sizeof(ArrayListValue));
+	/* (void **) typecast added by Malte Marwedel */
+	new_arraylist->data = (void **)malloc(length * sizeof(ArrayListValue));
 
 	if (new_arraylist->data == NULL) {
 		free(new_arraylist);
@@ -92,10 +92,10 @@ static int arraylist_enlarge(ArrayList *arraylist)
 	/* Double the allocated size */
 
 	newsize = arraylist->_alloced * 2;
-	
-	/* Reallocate the array to the new size */
 
-	data = realloc(arraylist->data, sizeof(ArrayListValue) * newsize);
+	/* Reallocate the array to the new size */
+	/* (void **) typecast added by Malte Marwedel */
+	data = (void**)realloc(arraylist->data, sizeof(ArrayListValue) * newsize);
 
 	if (data == NULL) {
 		return 0;
@@ -116,7 +116,7 @@ int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data)
 	}
 
 	/* Increase the size if necessary */
-	
+
 	if (arraylist->length + 1 > arraylist->_alloced) {
 		if (!arraylist_enlarge(arraylist)) {
 			return 0;
@@ -126,7 +126,7 @@ int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data)
 	/* Move the contents of the array forward from the index
 	 * onwards */
 
-	memmove(&arraylist->data[index + 1], 
+	memmove(&arraylist->data[index + 1],
 	        &arraylist->data[index],
 	        (arraylist->length - index) * sizeof(ArrayListValue));
 
@@ -172,7 +172,7 @@ void arraylist_remove(ArrayList *arraylist, int index)
 	arraylist_remove_range(arraylist, index, 1);
 }
 
-int arraylist_index_of(ArrayList *arraylist, 
+int arraylist_index_of(ArrayList *arraylist,
                        ArrayListEqualFunc callback,
                        ArrayListValue data)
 {
@@ -189,7 +189,7 @@ int arraylist_index_of(ArrayList *arraylist,
 void arraylist_clear(ArrayList *arraylist)
 {
 	/* To clear the list, simply set the length to zero */
-	
+
 	arraylist->length = 0;
 }
 
@@ -250,16 +250,16 @@ static void arraylist_sort_internal(ArrayListValue *list_data, int list_length,
 	list2_length = list_length - list1_length - 1;
 
 	/* list_data[0..list1_length-1] now contains all items which are
-	 * before the pivot. 
+	 * before the pivot.
 	 * list_data[list1_length..list_length-2] contains all items after
 	 * or equal to the pivot. */
 
-	/* Move the pivot into place, by swapping it with the item 
+	/* Move the pivot into place, by swapping it with the item
 	 * immediately following the end of list 1.  */
 
 	list_data[list_length-1] = list_data[list1_length];
 	list_data[list1_length] = pivot;
-	
+
 	/* Recursively sort the sublists. */
 
 	arraylist_sort_internal(list_data, list1_length, compare_func);
@@ -271,7 +271,7 @@ static void arraylist_sort_internal(ArrayListValue *list_data, int list_length,
 void arraylist_sort(ArrayList *arraylist, ArrayListCompareFunc compare_func)
 {
 	/* Perform the recursive sort */
-	
+
 	arraylist_sort_internal(arraylist->data, arraylist->length, compare_func);
 }
 

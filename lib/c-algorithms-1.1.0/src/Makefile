@@ -1,11 +1,12 @@
 #by Malte Marwedel
 
-COMPFLAGS= -Wall -Wextra -O2 -ggdb
+COMPFLAGS= -Wall -Wextra -std=gnu99 -pedantic -O2 -ggdb
+COMPILER=gcc
 
 all:
-	gcc -c arraylist.c $(COMPFLAGS)
-	gcc -c hash-table.c $(COMPFLAGS)
-	gcc -c trie.c $(COMPFLAGS)
+	$(COMPILER) -c arraylist.c $(COMPFLAGS)
+	$(COMPILER) -c hash-table.c $(COMPFLAGS)
+	$(COMPILER) -c trie.c $(COMPFLAGS)
 
 clean:
 	rm -f *.o

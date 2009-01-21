@@ -3,8 +3,10 @@
 (c) 2008 by Malte Marwedel
 This code may be used under the terms of the GPL version 2.
 */
-
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -32,7 +34,7 @@ void message(int level, const char * format, ...) {
 		return;
 	}
 	va_list ap;
-	char * strnew = smalloc(strlen(format)+100);
+	char * strnew = (char *)smalloc(strlen(format)+100);
 #ifndef NOCOLOR
 	if (strstr(format, " Warning: ") != 0) {
 		/*color output based on: http://linuxgazette.net/issue65/padala.html
@@ -68,7 +70,7 @@ char * merge(const char * str1, const char * str2) {
 	int len1 = strlen(str1);
 	int len2 = strlen(str2);
 	int biglen = len1+len2+1;
-	char * bigone = smalloc(sizeof(char)*biglen);
+	char * bigone = (char *)smalloc(sizeof(char)*biglen);
 	memcpy(bigone, str1, len1);
 	memcpy(bigone+len1, str2, len2);
 	bigone[biglen-1] = '\0';
@@ -86,7 +88,7 @@ char * nodoubleslash(const char * path) {
 		return NULL;
 	}
 	int rlen = strlen(path);
-	char * newpath = smalloc(sizeof(path)*(rlen+1));
+	char * newpath = (char *)smalloc(sizeof(path)*(rlen+1));
 	int rptr = 0;
 	int wptr = 0;
 	int lastslash = 0; //if 1, do not copy '/' signs
@@ -230,7 +232,7 @@ char * itoa(int val) {
 	2^63=9*10^18 and  negative sign. adding one char for the ending \0 makes
 	21 chars.
 	*/
-	char * blub = smalloc(21);
+	char * blub = (char *)smalloc(21);
 	sprintf(blub,"%i",val);
 	return blub;
 }
@@ -294,7 +296,7 @@ char * get_cmd_output(const char * command, const char * wdir,
  with parameter '%s'\n", command, parameter);
 		close(commpipe[1]); //Close unused side of pipe (in side)
 		const int buflen = 4096;
-		char * readed = smalloc(sizeof(char)*buflen);
+		char * readed = (char *)smalloc(sizeof(char)*buflen);
 		int i = 0;
 		for (i = 0; i < buflen-1; i++) {
 			if (read(commpipe[0], readed+i, 1) == 0) { //nothing to read
@@ -338,7 +340,7 @@ char * get_arg_filename(char * arg) {
 		return NULL;
 	}
 	int flen = strlen(arg);
-	char * filename = smalloc(sizeof(char)*(flen-1));
+	char * filename = (char *)smalloc(sizeof(char)*(flen-1));
 	memcpy(filename, arg+2, flen-1); //do not copy "-f" but copy "\0"
 	return filename;
 }
@@ -459,7 +461,7 @@ char * readfile(char * filename) {
 	int toread = 4096;
 	int len = 0;
 	int bufsize = toread+1;
-	text = smalloc(sizeof(char)*bufsize);
+	text = (char *)smalloc(sizeof(char)*bufsize);
 	while (bufsize < 100000000) { //100MB
 		if (bufsize <= len+toread) {
 			bufsize = (len+toread)+bufsize/3*4+1;
@@ -467,7 +469,7 @@ char * readfile(char * filename) {
 				message(1, "readfile: Error: Size overflow, exiting\n");
 				exit(1);
 			}
-			text = realloc(text,sizeof(char)*bufsize);
+			text = (char *)realloc(text,sizeof(char)*bufsize);
 			if (text == NULL) {
 				message(1, "readfile: Error: realloc failed, exiting\n");
 			}

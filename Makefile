@@ -2,6 +2,7 @@
 
 
 all:
+	make -C helper
 	make -C lib
 	make -C share
 	make -C cb_analyze_dep
@@ -13,6 +14,7 @@ all:
 	make -C scripts
 
 removebackups:
+	make -C helper removebackups
 	make -C share removebackups
 	make -C cb_analyze_dep removebackups
 	make -C cb_remove_from_source removebackups
@@ -26,6 +28,7 @@ removebackups:
 
 clean:
 	rm -f bin/cb_*
+	make -C helper clean
 	make -C lib clean
 	make -C share clean
 	make -C cb_analyze_dep clean

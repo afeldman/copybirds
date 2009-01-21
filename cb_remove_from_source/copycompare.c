@@ -1,5 +1,8 @@
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
@@ -132,8 +135,8 @@ void h_compf(comparedata_t * comp) {
 		fclose(s);
 		return;
 	}
-	char * sm = smalloc(sizeof(char)*bs);
-	char * tm = smalloc(sizeof(char)*bs);
+	char * sm = (char *)smalloc(sizeof(char)*bs);
+	char * tm = (char *)smalloc(sizeof(char)*bs);
 	int equals = 1;
 	int sr, tr;
 	do {

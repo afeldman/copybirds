@@ -2,7 +2,10 @@
 This code may be used under the terms of the GPL version 2.
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -27,7 +30,7 @@ list_head_t prepfifo;
 /*
 Adds a string to the internal FIFO */
 static void add(char * line) {
-	prepbuf_t * n = smalloc(sizeof(prepbuf_t));
+	prepbuf_t * n = (prepbuf_t *)smalloc(sizeof(prepbuf_t));
 	n->line = line;
 	list_add(&(n->head),&prepfifo);
 }
@@ -197,7 +200,7 @@ FILE * strace_preparation(FILE * runfile) {
 	int length = 0;
 	do {
 		unsigned int buflen = INITIAL_BUF_LEN;
-		char * readbuffer = smalloc(sizeof(char)*buflen);
+		char * readbuffer = (char *)smalloc(sizeof(char)*buflen);
 		length = getline(&readbuffer, &buflen, runfile); //uses realloc if needed
 		if (length > 0) { //if there is an empty line as EOF, getline forgets the \0
 			add(readbuffer);

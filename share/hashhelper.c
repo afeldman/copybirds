@@ -35,7 +35,7 @@ unsigned long hash_of_string(const char * text) {
 /*
 The hash function to use, if the key is a string */
 unsigned long hash_string_func(HashTableKey value) {
-	const char * content = value;
+	const char * content = (const char *)value;
 	return hash_of_string(content);
 }
 
@@ -43,8 +43,8 @@ unsigned long hash_string_func(HashTableKey value) {
 Compares two hash keys if they are strings.
 returns 1 if equal, 0 if not */
 int hash_string_equal_func(HashTableKey value1, HashTableKey value2) {
-	char * content1 = value1;
-	char * content2 = value2;
+	char * content1 = (char *)value1;
+	char * content2 = (char *)value2;
 	if ((content1 == NULL) || (content2 == NULL)) {
 		message(1, "hash_string_equal_func: Error: Got nullpointer as parameter\n");
 		return 0;

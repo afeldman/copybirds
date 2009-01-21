@@ -30,7 +30,7 @@ typedef struct connection {
 /*
 The hash function to use */
 unsigned long conn_hash_func(HashTableKey value) {
-	connection_t * content = value;
+	connection_t * content = (connection_t *)value;
 	unsigned long key = content->pid+content->port;
 	const char * str = content->host;
 	if (str == NULL)
@@ -43,8 +43,8 @@ unsigned long conn_hash_func(HashTableKey value) {
 Compares two hash keys.
 returns 1 if equal, 0 if not */
 int conn_equal_func(HashTableKey value1, HashTableKey value2) {
-	connection_t * content1 = value1;
-	connection_t * content2 = value2;
+	connection_t * content1 = (connection_t *)value1;
+	connection_t * content2 = (connection_t *)value2;
 	if (content1->pid == content2->pid) {
 		if (content1->port == content2->port) {
 			if (strcmp(content1->host, content2->host) == 0) {
@@ -73,15 +73,15 @@ connection_t * conn_seek(int pid, const char * host, int port) {
 	HashTableValue val = hash_table_lookup(conn_data, &key);
 	if (val == HASH_TABLE_NULL) //not found
 		return NULL;
-	return val;
+	return (connection_t *)val;
 }
 
 /*
 Adds an entry to the hash table */
 connection_t * conn_add_entry(int pid, const char * host, int port) {
 	message(4, "add_entry: %s adding for %i\n", host, pid);
-	connection_t * n = smalloc(sizeof(connection_t));
-	connection_t * k = smalloc(sizeof(connection_t));
+	connection_t * n = (connection_t *)smalloc(sizeof(connection_t));
+	connection_t * k = (connection_t *)smalloc(sizeof(connection_t));
 	n->pid = pid;
 	k->pid = pid;
 	n->host = host;
@@ -139,7 +139,7 @@ int connection_savexml(xmlTextWriterPtr writer) {
 	hash_table_iterate(conn_data, &hit);
 	connection_t * x;
 	while (hash_table_iter_has_more(&hit)) {
-		x = hash_table_iter_next(&hit);
+		x = (connection_t *)hash_table_iter_next(&hit);
 		if (conn_savexml(writer, x) == 0) { //saving was not successful
 			return 0;
 		}

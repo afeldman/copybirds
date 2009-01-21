@@ -2,7 +2,9 @@
 This code may be used under the terms of the GPL version 2.
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <signal.h>

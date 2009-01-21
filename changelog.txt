@@ -1,6 +1,7 @@
 SVN current (Version 0.8.7)
   Typo fixes
   Add a warning in cb_meta if a package is available but not installed
+  Add typecasts so that compiling works wit g++ too
 
 2008-12-22 (Version 0.8.6)
   First sourceforge release

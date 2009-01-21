@@ -1,7 +1,10 @@
 /*(c) 2008 by Malte Marwedel
 This code may be used under the terms of the GPL version 2.
 */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -40,7 +43,7 @@ spid_t * pid_seek(int pid) {
 Adds a pid to the list. Returns a pointer to the generated structure */
 spid_t * pid_add_entry(int pid, const char * firstwdir) {
 	//add at the beginning is faster
-	spid_t * n = smalloc(sizeof(spid_t));
+	spid_t * n = (spid_t *)smalloc(sizeof(spid_t));
 	n->next = first_spid;
 	first_spid = n;
 	n->pid = pid;
@@ -51,7 +54,7 @@ spid_t * pid_add_entry(int pid, const char * firstwdir) {
 /*
 Adds a pid to the list, the initialized path is fetched from the parent pid */
 spid_t * pid_add_child(int parent, int child) {
-	spid_t * n = smalloc(sizeof(spid_t));
+	spid_t * n = (spid_t *)smalloc(sizeof(spid_t));
 	n->next = first_spid;
 	first_spid = n;
 	n->pid = child;
@@ -78,7 +81,7 @@ void pid_update_path(int pid, const char * newwdir) {
 		char * oldwdir = proc->wdir;
 		if (path_is_relative(newwdir)) {
 			if (oldwdir != NULL) {
-				char * abspath = smalloc(MAX_PATH_LEN);
+				char * abspath = (char *)smalloc(MAX_PATH_LEN);
 				rel2abs(oldwdir, newwdir, abspath, MAX_PATH_LEN-1);
 				proc->wdir = abspath;
 			} else
@@ -103,7 +106,7 @@ char * pid_get_absolute_path(int pid, const char * filename) {
 		if (proc != NULL) {
 			char * wdir = proc->wdir;
 			if (wdir != NULL) {
-				char * abspath = smalloc(MAX_PATH_LEN);
+				char * abspath = (char *)smalloc(MAX_PATH_LEN);
 				rel2abs(filename, proc->wdir, abspath, MAX_PATH_LEN-1);
 				message(2, "pid_get_absolute_path: Abspath from %s is %s\n", filename, abspath);
 				return abspath;

@@ -369,7 +369,7 @@ int main(int argc, char *argv[]) {
 	int argoffset = setup_args(argc, argv);
 	message(1, "Welcome to '%s'\n", argv[0]);
 	//switch to the true path, removing symlinks
-	char * wdir = smalloc(BUF_SIZE);
+	char * wdir = (char *)smalloc(BUF_SIZE);
 	if (getcwd(wdir, BUF_SIZE) != NULL) {
 		message(2, "main: Working dir: '%s'\n", wdir);
 		char * twdir = truepath(wdir);

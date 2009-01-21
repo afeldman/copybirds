@@ -33,7 +33,7 @@ HashTable * file_data;
 /*
 The hash function to use */
 unsigned long hash_func(HashTableKey value) {
-	faccessk_t * content = value;
+	faccessk_t * content = (faccessk_t *)value;
 	unsigned long key = content->pid*100000;
 	const char * str = content->filename;
 	//message(1, "Will hash %p, '%c%c%c%c'\n", str, (char)str>>24, (char)str>>16, (char)str>>8, (char)str);
@@ -47,8 +47,8 @@ unsigned long hash_func(HashTableKey value) {
 Compares two hash keys.
 returns 1 if equal, 0 if not */
 int equal_func(HashTableKey value1, HashTableKey value2) {
-	faccessk_t * content1 = value1;
-	faccessk_t * content2 = value2;
+	faccessk_t * content1 = (faccessk_t *)value1;
+	faccessk_t * content2 = (faccessk_t *)value2;
 	if (content1->pid == content2->pid) {
 		if (strcmp(content1->filename, content2->filename) == 0)
 			return 1; //equal
@@ -73,7 +73,7 @@ faccess_t * seek_file(const char * filename, int pid) {
 	HashTableValue val = hash_table_lookup(file_data, &key);
 	if (val == HASH_TABLE_NULL) //not found
 		return NULL;
-	return val;
+	return (faccess_t *)val;
 }
 
 /*
@@ -81,8 +81,8 @@ Adds an entry to the hash table */
 faccess_t * add_entry(char * filename, int pid) {
 	//add at the beginning is faster
 	message(4, "add_entry: %s adding for %i\n", filename, pid);
-	faccess_t * n = smalloc(sizeof(faccess_t));
-	faccessk_t * k = smalloc(sizeof(faccessk_t));
+	faccess_t * n = (faccess_t *)smalloc(sizeof(faccess_t));
+	faccessk_t * k = (faccessk_t *)smalloc(sizeof(faccessk_t));
 	n->pid = pid;
 	k->pid = pid;
 	n->filename = filename;
@@ -182,7 +182,7 @@ int files_savexml(xmlTextWriterPtr writer) {
 	hash_table_iterate(file_data, &hit);
 	faccess_t * x;
 	while (hash_table_iter_has_more(&hit)) {
-		x = hash_table_iter_next(&hit);
+		x = (faccess_t *)hash_table_iter_next(&hit);
 		if (file_savexml(writer, x) == 0) { //saving was not successful
 			return 0;
 		}

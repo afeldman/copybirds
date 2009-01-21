@@ -1,7 +1,9 @@
 /*(c) 2008 by Malte Marwedel
 This code may be used under the terms of the GPL version 2.
 */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -51,7 +53,7 @@ void file_start_iterate(void) {
 }
 
 const char * file_get_next(void) {
-	const char * filename = hash_table_iter_next(&fit);
+	const char * filename = (const char *)hash_table_iter_next(&fit);
 	return filename;
 }
 
@@ -104,7 +106,7 @@ void package_file_add(const char * package, const char * filename) {
  informations\n", package);
 	}
 	message(5, "package_file_add: package name: '%s'\n", ps->name);
-	pfstore_t * pf = smalloc(sizeof(pfstore_t));
+	pfstore_t * pf = (pfstore_t *)smalloc(sizeof(pfstore_t));
 	pf->package = ps;
 	pf->refcount = 1;
 	//message(1, "File: '%s' package: '%s'\n", filename, package);
@@ -138,7 +140,7 @@ void findings_start_iterate(void) {
 }
 
 pstore_t * findings_get_next(void) {
-	pstore_t * ps = hash_table_iter_next(&findingsit);
+	pstore_t * ps = (pstore_t *)hash_table_iter_next(&findingsit);
 	return ps;
 }
 

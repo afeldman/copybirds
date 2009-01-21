@@ -30,11 +30,7 @@
  *			== NULL: error
  */
 char *
-rel2abs(path, base, result, size)
-	const char *path;
-	const char *base;
-	char *result;
-	const size_t size;
+rel2abs(const char * path, const char * base, char * result, const size_t size)
 {
 	const char *pp, *bp;
 	/*

@@ -1,4 +1,7 @@
+
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <dirent.h>
 #include <sys/types.h>
@@ -61,8 +64,9 @@ void recursive_dir(const char * base, pathfunc handler, void * somedata,
 				 current twice */
 				if ((strcmp(filename, ".") != 0) && (strcmp(filename, "..") != 0)) {
 					void * subdata = handler(base, filename, somedata);
+					//possible bug: char * newbase = dirmerge(base, filename); missing
 					if ((dorecursive) && (is_directory(base, filename))) {
-						recursive_dir(filename, handler, subdata, dorecursive);
+						recursive_dir(filename, handler, subdata, dorecursive); //use newbase instead of filename?
 					}
 				}
 			}
@@ -85,7 +89,7 @@ char * sreadlink(const char * name) {
 	}
 	int blen = 512;
 	do {
-		char * buf = smalloc(sizeof(char)*blen);
+		char * buf = (char *)smalloc(sizeof(char)*blen);
 		int tlen = readlink(name, buf, blen);
 		if (tlen < 0) {
 			message(1, "sreadlink: Error: Could not read the link\n");
@@ -144,7 +148,7 @@ char * truepath(const char * path) {
 								char * parent = nodoubleslash(parent_pre);
 								free(parent_pre);
 								//now make absolute to relative link
-								abstarget = smalloc(sizeof(char)*2048);
+								abstarget = (char *)smalloc(sizeof(char)*2048);
 								rel2abs(target, parent, abstarget, 2048);
 								free(parent);
 								free(target); //in this case abstarget != target
@@ -190,7 +194,7 @@ char * reveal_true_abs_link_target(const char * linkname) {
 		char * namebase = path_from_file(linkname);
 		char * nametruebase = truepath(namebase);
 		if (nametruebase != NULL) {
-			linkabstarget = smalloc(sizeof(char)*2048);
+			linkabstarget = (char *)smalloc(sizeof(char)*2048);
 			rel2abs(linktarget, nametruebase, linkabstarget, 2048);
 		} else {
 			message(1, "reveal_true_abs_link_target: Error: could not get base of\

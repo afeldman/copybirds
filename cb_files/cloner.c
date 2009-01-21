@@ -2,7 +2,9 @@
 This code may be used under the terms of the GPL version 2.
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -146,7 +148,7 @@ void run_if_link(const char * path, const char * root, int isbl) {
 			rellinktarget = strdup(linktarget);
 		} else { //is absolute
 			abslinktarget = strdup(linktarget);
-			rellinktarget = smalloc(sizeof(char) *2048);
+			rellinktarget = (char *)smalloc(sizeof(char) *2048);
 			/*The problem is that the filepath may be a part of a symlink. In order to
 			 make correct relative symlinks, the relative path has to be relative to
 			 the true path were thesymlink will be really stored in and has to be

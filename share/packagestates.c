@@ -1,6 +1,9 @@
 //(c) 2008 by Malte Marwedel. Use under the terms of the GPL Version 2
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,7 +21,7 @@ HashTable * packstates = NULL;
 Generates a proper struct and returns a pointer to it */
 static pstore_t * pstore_make(const char * package, const char * version,
                        int installed) {
-	pstore_t * ps = smalloc(sizeof(pstore_t));
+	pstore_t * ps = (pstore_t *)smalloc(sizeof(pstore_t));
 	ps->name = strdup(package);
 	if (version != NULL) {
 		ps->version = strdup(version);

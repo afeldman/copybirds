@@ -30,8 +30,8 @@ void merger_initmemory(void) {
 int vequal_func(metavalue_t * value1, metavalue_t * value2) {
 	if (strcmp(value1->name, value2->name) == 0) {
 		if ((value1->type == IS_STRING) && (value2->type == IS_STRING)) {
-			char * data1 = value1->data;
-			char * data2 = value2->data;
+			char * data1 = (char *)(value1->data);
+			char * data2 = (char *)(value2->data);
 			if (strcmp(data1, data2) == 0) {
 				return 1; //equal
 			}
@@ -45,12 +45,12 @@ metavalue_t * node_get(const char * nodename) {
 	HashTableValue val = hash_table_lookup(manc, (HashTableValue)nodename);
 	if (val == HASH_TABLE_NULL) //not found
 		return NULL;
-	return val;
+	return (metavalue_t *)val;
 }
 
 metavalue_t * node_make(const char * nodename, const char * value,
 	 const char * sourcefile) {
-	metavalue_t * n = smalloc(sizeof(metavalue_t));
+	metavalue_t * n = (metavalue_t *)smalloc(sizeof(metavalue_t));
 	n->name = strdup(nodename);
 	n->type = IS_STRING;
 	n->data = strdup(value);
@@ -188,12 +188,12 @@ metasubvalue_t * node_subget(HashTable * subnodes, xmlNodePtr nodename) {
 	HashTableValue val = hash_table_lookup(subnodes, (HashTableValue)nodename);
 	if (val == HASH_TABLE_NULL) //not found
 		return NULL;
-	return val;
+	return (metasubvalue_t *)val;
 }
 
 
 metasubvalue_t * node_submake(xmlNodePtr value, const char * sourcefile) {
-	metasubvalue_t * n = smalloc(sizeof(metasubvalue_t));
+	metasubvalue_t * n = (metasubvalue_t *)smalloc(sizeof(metasubvalue_t));
 	n->data = xmlCopyNode(value, 1);//1 means recursive copy
 	n->sourcefile = strdup(sourcefile);
 	return n;
@@ -251,7 +251,7 @@ void merger_add_subentries(HashTable * subnodes, xmlNodePtr rootvalue,
 
 
 metavalue_t * node_make_complex(const char * nodename, const char * sourcefile){
-	metavalue_t * n = smalloc(sizeof(metavalue_t));
+	metavalue_t * n = (metavalue_t *)smalloc(sizeof(metavalue_t));
 	n->name = strdup(nodename);
 	n->type = IS_HASH;
 	n->data = hash_table_new(shash_func, sequal_func);
@@ -282,7 +282,7 @@ HashTable * merger_have_complex_entry(const char * nodename,
 					message(1, "merger_have_complex_entry: Error: data is null. Exiting.\
 \n");
 				}
-				if (strlen(node->data) == 0) {
+				if (strlen((char *)(node->data)) == 0) {
 					//ok, we can merge, as the node is virtually empty
 					message(2, "merger_have_complex_entry: Warning: Empty node '%s' from\
  file '%s' will be replaced by complex node by file '%s'\n",
@@ -309,11 +309,11 @@ HashTable * merger_have_complex_entry(const char * nodename,
 			}
 		}
 	}
-	return node->data;
+	return (HashTable *)(node->data);
 }
 
 void merger_write_value(xmlNodePtr meta, metavalue_t * value) {
-	xml_have_content(meta, value->name, value->data);
+	xml_have_content(meta, value->name, (const char *)(value->data));
 }
 
 /*
@@ -321,9 +321,9 @@ Writes the entries from value as childs into the meta pointer */
 void merger_write_complex(xmlNodePtr meta, metavalue_t * value) {
 	xmlNodePtr subbase = xml_have_node(meta, value->name);
 	HashTableIterator sit;
-	hash_table_iterate(value->data, &sit);
+	hash_table_iterate((HashTable *)(value->data), &sit);
 	while (hash_table_iter_has_more(&sit)) {
-		metasubvalue_t * subvalue = hash_table_iter_next(&sit);
+		metasubvalue_t * subvalue = (metasubvalue_t *)hash_table_iter_next(&sit);
 		xmlNodePtr subvalnode = subvalue->data;
 		xmlAddChild(subbase, subvalnode);
 	}
@@ -335,7 +335,7 @@ void merger_write_xml(xmlNodePtr meta) {
 	HashTableIterator mit;
 	hash_table_iterate(manc, &mit);
 	while (hash_table_iter_has_more(&mit)) {
-		metavalue_t * value = hash_table_iter_next(&mit);
+		metavalue_t * value = (metavalue_t *)hash_table_iter_next(&mit);
 		if (value->type == IS_STRING) {
 			merger_write_value(meta, value);
 		} else if (value->type == IS_HASH) {

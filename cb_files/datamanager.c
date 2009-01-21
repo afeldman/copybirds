@@ -51,7 +51,7 @@ void file_start_iterate(void) {
 }
 
 const char * file_get_next(void) {
-	const char * filename = hash_table_iter_next(&fit);
+	const char * filename = (const char *)hash_table_iter_next(&fit);
 	return filename;
 }
 
@@ -100,7 +100,7 @@ int bl_add(const char * bad) {
 	int i;
 	int max = banc->length;
 	for (i = 0; i < max; i++) {
-		char * cbad = banc->data[i];
+		char * cbad = (char *)(banc->data[i]);
 		if (cbad == NULL) break;
 		if (bl_partof(cbad, bad) == 1) return 0; //already blacklisted
 		if (bl_partof(bad, cbad)) { //update entry
@@ -120,7 +120,7 @@ int bl_check(const char * check) {
 	int i;
 	int max = banc->length;
 	for (i = 0; i < max; i++) {
-		char * cbad = banc->data[i];
+		char * cbad = (char *) (banc->data[i]);
 		if (cbad == NULL) break;
 		if (bl_partof(cbad, check)) {
 			message(3, "bl_check: '%s' is blacklisted\n", check);
@@ -137,7 +137,7 @@ pidstore_t * panc; //pids
 
 void pid_add_new(int pid) {
 	//add at the beginning is faster
-	pidstore_t * n = smalloc(sizeof(pidstore_t));
+	pidstore_t * n = (pidstore_t *)smalloc(sizeof(pidstore_t));
 	n->next = panc;
 	panc = n;
 	n->pid = pid;
@@ -195,7 +195,7 @@ void device_start_iterate(void) {
 }
 
 const char * device_get_next(void) {
-	const char * filename = hash_table_iter_next(&dit);
+	const char * filename = (const char *)hash_table_iter_next(&dit);
 	return filename;
 }
 

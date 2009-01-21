@@ -4,7 +4,10 @@
 This code may be used under the terms of the GPL version 2.
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -235,9 +238,9 @@ void process_line(const char * line, char ** firstwdir) {
 		free(type);
 		goto end_free;
 	}
-	//now all syscalls which are using filenames
-	char * filename = extract_filename(line);
-	if (strcmp(syscall, "open") == 0) { //it true: add filename to hash-table
+	{ //now all syscalls which are using filenames ( '{' needed for c++)
+		char * filename = extract_filename(line);
+		if (strcmp(syscall, "open") == 0) { //it true: add filename to hash-table
 		const char * ending = filename_ending(line);
 		char * ro = strstr(ending, "O_RDONLY");
 		char * wo = strstr(ending, "O_WRONLY");
@@ -249,58 +252,59 @@ void process_line(const char * line, char ** firstwdir) {
 		char * absfilename = pid_get_absolute_path(pid, filename);
 		file_add(absfilename, mode, pid);
 		free(absfilename);
-	} else
-	if ((strcmp(syscall, "stat64") == 0) || (strcmp(syscall, "lstat64") == 0) ||
-		 (strcmp(syscall, "readlink") == 0) || (strcmp(syscall, "getcwd") == 0)) {
-		//all those four syscalls can be treated equal: add used filename
-		if (strlen(filename) > 0) {
-			char * absfilename = pid_get_absolute_path(pid, filename);
-			file_add(absfilename, FO_READ, pid); //read may be not correct, but fits best
-			free(absfilename);
 		} else
-			message(1, "process_line: Warning: '%s' called, but filename has a length"
-			           " of zero, line: %i\n", syscall, get_linecount());
-	} else
-	if (strcmp(syscall, "access") == 0) { //if true: add filename with used mode
-		const char * ending = filename_ending(line);
-		char * exis = strstr(ending, "F_OK");
-		char * ro = strstr(ending, "R_OK");
-		char * wo = strstr(ending, "W_OK");
-		char * xo = strstr(ending, "X_OK");
-		int mode = 0;
-		if (exis != NULL) mode |= FO_READ; //not exact, but we have to read for copying
-		if (ro != NULL) mode |= FO_READ;
-		if (wo != NULL) mode |= FO_WRITE;
-		if (xo != NULL) mode |= FO_EXEC;
-		message(3, "main: %i, %s\n",pid , filename);
-		char * absfilename = pid_get_absolute_path(pid, filename);
-		file_add(absfilename, mode, pid);
-		free(absfilename);
-	} else
-	if (strcmp(syscall, "execve") == 0) {
-		//gets absolute file path and adds it
-		if (*firstwdir != NULL) {
-			/*Has to be done before the abs_prog_path() call
-			because the first command may be relative */
-			pid_add_entry(pid, *firstwdir);
-			free(*firstwdir);
-			*firstwdir = NULL;
+		if ((strcmp(syscall, "stat64") == 0) || (strcmp(syscall, "lstat64") == 0) ||
+			 (strcmp(syscall, "readlink") == 0) || (strcmp(syscall, "getcwd") == 0)) {
+			//all those four syscalls can be treated equal: add used filename
+			if (strlen(filename) > 0) {
+				char * absfilename = pid_get_absolute_path(pid, filename);
+				file_add(absfilename, FO_READ, pid); //read may be not correct, but fits best
+				free(absfilename);
+			} else
+				message(1, "process_line: Warning: '%s' called, but filename has a length"
+				           " of zero, line: %i\n", syscall, get_linecount());
+		} else
+		if (strcmp(syscall, "access") == 0) { //if true: add filename with used mode
+			const char * ending = filename_ending(line);
+			char * exis = strstr(ending, "F_OK");
+			char * ro = strstr(ending, "R_OK");
+			char * wo = strstr(ending, "W_OK");
+			char * xo = strstr(ending, "X_OK");
+			int mode = 0;
+			if (exis != NULL) mode |= FO_READ; //not exact, but we have to read for copying
+			if (ro != NULL) mode |= FO_READ;
+			if (wo != NULL) mode |= FO_WRITE;
+			if (xo != NULL) mode |= FO_EXEC;
+			message(3, "main: %i, %s\n",pid , filename);
+			char * absfilename = pid_get_absolute_path(pid, filename);
+			file_add(absfilename, mode, pid);
+			free(absfilename);
+		} 	else
+		if (strcmp(syscall, "execve") == 0) {
+			//gets absolute file path and adds it
+			if (*firstwdir != NULL) {
+				/*Has to be done before the abs_prog_path() call
+				because the first command may be relative */
+				pid_add_entry(pid, *firstwdir);
+				free(*firstwdir);
+				*firstwdir = NULL;
+			}
+			char * executed = abs_prog_path(pid, filename);
+			message(2, "main: %i, %s\n",pid , executed);
+			file_add(executed, FO_EXEC, pid);
+			free(executed);
+		} else
+		if (strcmp(syscall, "chdir") == 0) {
+			//follows successful chdir.
+			int succ = get_retvalue(line);
+			message(2, "main: chdir called by %i, changes %s, returned: %i\n", pid,
+			        filename, succ);
+			if (succ == 0) {
+				pid_update_path(pid, filename);
+			}
 		}
-		char * executed = abs_prog_path(pid, filename);
-		message(2, "main: %i, %s\n",pid , executed);
-		file_add(executed, FO_EXEC, pid);
-		free(executed);
-	} else
-	if (strcmp(syscall, "chdir") == 0) {
-		//follows successful chdir.
-		int succ = get_retvalue(line);
-		message(2, "main: chdir called by %i, changes %s, returned: %i\n", pid,
-						filename, succ);
-		if (succ == 0) {
-			pid_update_path(pid, filename);
-		}
+		free(filename);
 	}
-	free(filename);
 end_free:
 	free(syscall);
 }
@@ -337,11 +341,11 @@ int main(int argc, char *argv[]) {
 		//some concatenations and removements
 		stracedata = strace_preparation(stracedata);
 		unsigned int buflen = INITIAL_BUF_LEN;
-		char * line = smalloc(sizeof(char) * buflen);
+		char * line = (char *)smalloc(sizeof(char) * buflen);
 		int length = 0;
 		linecount = 0;
 		//get first wdir
-		char * firstwdir = smalloc(sizeof(char) * buflen);
+		char * firstwdir = (char *)smalloc(sizeof(char) * buflen);
 		int firstwdirlen = getline(&firstwdir, &buflen, firstdir);
 		if (firstwdir[firstwdirlen-1] == '\n') firstwdir[firstwdirlen-1] = '\0';
 		//files
