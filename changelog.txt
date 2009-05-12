@@ -1,4 +1,5 @@
 SVN current (Version 0.8.7)
+  removing -F option for strace, as this has been declared obsolete by strace and is now handled as -f. Which resulted in the -fF option behaving like the new -ff option which has the exactly oppsite effect of the original -F.
   Typo fixes
   Add a warning in cb_meta if a package is available but not installed
   Add typecasts so that compiling works wit g++ too

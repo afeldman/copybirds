@@ -38,11 +38,11 @@ SYSCALLS="open,access,execve,clone,fork,vfork,chdir,stat64,lstat64,readlink,getc
 
 #note: Unfortunately the return value of strace is not documented in the man-page.
 
-strace -q -fF -o "$COPY_TRACETMPDIR"/strace_bashrc_temp -e trace=$SYSCALLS bash ~/.bashrc
+strace -q -f -o "$COPY_TRACETMPDIR"/strace_bashrc_temp -e trace=$SYSCALLS bash ~/.bashrc
 
 checkerr
 
-strace -q -fF -o "$COPY_TRACETMPDIR"/strace_temp -e trace=$SYSCALLS "$@"
+strace -q -f -o "$COPY_TRACETMPDIR"/strace_temp -e trace=$SYSCALLS "$@"
 
 checkerr
 
