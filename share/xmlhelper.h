@@ -1,6 +1,13 @@
 #ifndef XMLHELPER_H
 #define XMLHELPER_H
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+/* To find the headers, add
+-I/usr/include/libxml2
+as compiler flag */
+
 typedef void (*nodefunc) (xmlNodePtr node);
 
 

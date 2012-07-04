@@ -1,5 +1,5 @@
 ------------ This version is from the SVN trunk, please use an official release instead-----
-(c) 2008 by Malte Marwedel m.marwedel AT onlinehome DOT de
+(c) 2008 by Malte Marwedel m DOT talk AT marwedels DOT de
 COPYBIRDS, Copy binaries runtime data surrounding
 http://copybirds.sourceforge.net
 Terms of Use: GPL Version 2 or later
