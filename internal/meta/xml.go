@@ -17,6 +17,7 @@ type xmlMeta struct {
 	Packages    xmlPackages    `xml:"packages"`
 	Commands    xmlCommands    `xml:"commands"`
 	Connections xmlConnections `xml:"connections"`
+	FilePackages xmlFilePackages `xml:"file_packages"`
 }
 
 type xmlSystem struct {
@@ -54,7 +55,16 @@ type xmlConnection struct {
 	Name string `xml:",chardata"`
 }
 
-const metaVersion = "0.8.7"
+type xmlFilePackages struct {
+	List []xmlFilePackage `xml:"entry"`
+}
+
+type xmlFilePackage struct {
+	File    string `xml:"file,attr"`
+	Package string `xml:"package,attr"`
+}
+
+const metaVersion = "0.9.0"
 
 // ReadXML liest eine gespeicherte SysInfo aus einer XML-Datei
 func ReadXML(path string) (*SysInfo, error) {
@@ -96,6 +106,14 @@ func ReadXML(path string) (*SysInfo, error) {
 	// Connections konvertieren
 	for _, c := range xm.Connections.List {
 		info.Connections = append(info.Connections, c.Name)
+	}
+
+	// FilePackages konvertieren
+	for _, fp := range xm.FilePackages.List {
+		info.FilePackages = append(info.FilePackages, FilePackageEntry{
+			File:    fp.File,
+			Package: fp.Package,
+		})
 	}
 
 	log.Infof("ReadXML: Geladene SysInfo aus '%s': Distro='%s', Kernel='%s', %d Pakete",
@@ -140,6 +158,14 @@ func WriteXML(info *SysInfo, path string) error {
 	// Connections konvertieren
 	for _, c := range info.Connections {
 		xm.Connections.List = append(xm.Connections.List, xmlConnection{Name: c})
+	}
+
+	// FilePackages konvertieren
+	for _, fp := range info.FilePackages {
+		xm.FilePackages.List = append(xm.FilePackages.List, xmlFilePackage{
+			File:    fp.File,
+			Package: fp.Package,
+		})
 	}
 
 	data, err := xml.MarshalIndent(xm, "", "  ")

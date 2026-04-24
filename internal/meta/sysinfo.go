@@ -11,8 +11,9 @@ type SysInfo struct {
 	GLExtensions  string // GL_EXTENSIONS (lange Liste)
 	UserHome      string // $HOME
 	Packages      []PackageInfo
-	Commands      []string // ausgeführte Kommandos
-	Connections   []string // Netzwerkverbindungen
+	FilePackages  []FilePackageEntry // Datei → Paket Zuordnung
+	Commands      []string           // ausgeführte Kommandos
+	Connections   []string           // Netzwerkverbindungen
 }
 
 // PackageInfo enthält Informationen zu einem installierten Paket
@@ -20,4 +21,10 @@ type PackageInfo struct {
 	Name      string
 	Version   string
 	Installed bool
+}
+
+// FilePackageEntry ordnet einen Dateipfad seinem Debian-Paket zu
+type FilePackageEntry struct {
+	File    string
+	Package string
 }
