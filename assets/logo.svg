@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 130" width="540" height="130">
+
+  <!-- Icon circle -->
+  <circle cx="65" cy="65" r="58" fill="#1e3a5f"/>
+
+  <!-- Subtle inner glow ring -->
+  <circle cx="65" cy="65" r="54" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+
+  <!-- Bird + package group, centered in icon -->
+  <g transform="translate(65, 58)">
+
+    <!-- Upper wing: sweeps up and back-left -->
+    <path d="M 0,-7 C -10,-16 -26,-24 -46,-19 C -32,-11 -16,-5 0,-2"
+          fill="white"/>
+
+    <!-- Body -->
+    <ellipse cx="8" cy="-1" rx="20" ry="10"
+             transform="rotate(-12, 8, -1)"
+             fill="white"/>
+
+    <!-- Lower trailing wing -->
+    <path d="M 0,-2 C -12,8 -30,15 -42,10 C -28,5 -14,0 0,3"
+          fill="white" opacity="0.65"/>
+
+    <!-- Tail — forked swallow-style -->
+    <path d="M -14,-4 L -32,-14 L -19,-1 L -32,12 L -14,4 Z"
+          fill="white"/>
+
+    <!-- Head -->
+    <circle cx="24" cy="-8" r="9" fill="white"/>
+
+    <!-- Beak -->
+    <polygon points="32,-8 44,-7 32,-5" fill="#60a5fa"/>
+
+    <!-- Eye -->
+    <circle cx="25" cy="-11" r="2" fill="#1e3a5f"/>
+    <circle cx="25.5" cy="-11.5" r="0.8" fill="white"/>
+
+    <!-- Leg strings -->
+    <line x1="10" y1="8"  x2="8"  y2="14" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="17" y1="8"  x2="19" y2="14" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+
+    <!-- Package / Docker box -->
+    <rect x="0" y="14" width="24" height="18" rx="3"
+          fill="#3b82f6" stroke="white" stroke-width="1.6"/>
+
+    <!-- Box cross lines (crate style) -->
+    <line x1="12" y1="14" x2="12" y2="32" stroke="white" stroke-width="0.9" opacity="0.6"/>
+    <line x1="0"  y1="23" x2="24" y2="23" stroke="white" stroke-width="0.9" opacity="0.6"/>
+
+    <!-- Tiny Docker whale hint: three stacked dots on box -->
+    <circle cx="5"  cy="19" r="1.1" fill="white" opacity="0.5"/>
+    <circle cx="5"  cy="23" r="1.1" fill="white" opacity="0.5"/>
+    <circle cx="5"  cy="27" r="1.1" fill="white" opacity="0.5"/>
+
+  </g>
+
+  <!-- Vertical separator -->
+  <line x1="136" y1="18" x2="136" y2="112"
+        stroke="#3b82f6" stroke-width="1.5" opacity="0.35"/>
+
+  <!-- Main wordmark -->
+  <text x="155" y="70"
+        font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="46" font-weight="800" fill="#1e3a5f" letter-spacing="-2">
+    copybirds
+  </text>
+
+  <!-- Tagline -->
+  <text x="158" y="93"
+        font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="12.5" fill="#3b82f6" letter-spacing="4.5" font-weight="600">
+    CAPTURE · PACKAGE · DEPLOY
+  </text>
+
+</svg>
