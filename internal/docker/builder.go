@@ -10,15 +10,18 @@ import (
 
 	"copybirds/internal/fileops"
 	"copybirds/internal/log"
+	"copybirds/internal/meta"
 )
 
 // BuildOptions steuert den Docker-Build
 type BuildOptions struct {
-	BaseImage     string // default: "debian:bookworm-slim"
-	Tag           string // default: "cb_app"
-	StagingDir    string // Pfad zum Staging-Verzeichnis
-	Entrypoint    string // Relativer Pfad im Staging-Dir zum Binary
-	AlpineWarning bool   // true wenn Alpine/Busybox gewählt
+	BaseImage        string // default: aus meta.xml abgeleitet
+	Tag              string // default: "cb_app"
+	StagingDir       string // Pfad zum Staging-Verzeichnis
+	Entrypoint       string // Relativer Pfad im Staging-Dir zum Binary
+	AlpineWarning    bool   // true wenn Alpine/Busybox gewählt
+	CustomDockerfile string // Pfad zu user-eigenem Dockerfile; leer = auto-generieren
+	MetaFile         string // Pfad zur meta.xml; leer = kein apt-Management
 }
 
 // DefaultOptions gibt Standard-Optionen zurück
@@ -57,6 +60,44 @@ func promptConfirmation(msg string) bool {
 		strings.EqualFold(line, "y") || strings.EqualFold(line, "yes")
 }
 
+// splitStaging kopiert nur nicht-packaged Dateien aus stagingDir nach unpackagedDir.
+// Packaged files (in filePackages) werden übersprungen — apt installiert sie.
+func splitStaging(stagingDir, unpackagedDir string, filePackages []meta.FilePackageEntry) error {
+	// Set für O(1)-Lookup: Absolut-Pfad auf Source-System → true
+	packaged := make(map[string]bool, len(filePackages))
+	for _, fp := range filePackages {
+		packaged[fp.File] = true
+	}
+
+	return filepath.Walk(stagingDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		// Relativer Pfad im Staging-Dir
+		rel, err := filepath.Rel(stagingDir, path)
+		if err != nil {
+			return err
+		}
+		// Absoluter Pfad wie er auf dem Source-System war
+		absPath := "/" + rel
+
+		if packaged[absPath] {
+			return nil // Paket wird von apt installiert
+		}
+
+		// Datei nach unpackagedDir kopieren
+		dest := filepath.Join(unpackagedDir, rel)
+		if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+			return err
+		}
+		return fileops.CopyFile(path, dest)
+	})
+}
+
 // Build erstellt das Docker-Image aus dem Staging-Verzeichnis.
 //
 // Ablauf:
@@ -65,10 +106,10 @@ func promptConfirmation(msg string) bool {
 //  3. Entrypoint prüfen (existiert im Staging-Dir)
 //  4. Alpine-Warnung (wenn Basis-Image musl-basiert)
 //  5. Temp-Verzeichnis erstellen
-//  6. Staging-Dir nach buildCtxDir/staging/ kopieren
-//  7. Dockerfile schreiben
-//  8. docker build ausführen
-//  9. Temp-Dir aufräumen
+//  6. Meta-Datei lesen (falls vorhanden)
+//  7. Staging aufteilen: packaged → überspringen, Rest → _unpackaged/
+//  8. Dockerfile schreiben (custom oder auto-generiert)
+//  9. docker build ausführen
 // 10. Image-ID ausgeben
 func Build(opts BuildOptions) error {
 	// 1. Docker im PATH prüfen
@@ -127,30 +168,84 @@ func Build(opts BuildOptions) error {
 		return fmt.Errorf("Build: Temp-Verzeichnis kann nicht erstellt werden: %w", err)
 	}
 	log.Infof("Build: Build-Context: %s", buildCtxDir)
-
-	// Cleanup des Temp-Dirs am Ende
 	defer func() {
 		if err := os.RemoveAll(buildCtxDir); err != nil {
 			log.Warnf("Build: Warnung: Temp-Verzeichnis '%s' kann nicht gelöscht werden: %v", buildCtxDir, err)
-		} else {
-			log.Infof("Build: Temp-Verzeichnis '%s' bereinigt", buildCtxDir)
 		}
 	}()
 
-	// 6. Staging-Dir nach buildCtxDir/staging/ kopieren
-	stagingDest := filepath.Join(buildCtxDir, "staging")
-	if err := fileops.CopyDir(opts.StagingDir, stagingDest); err != nil {
-		return fmt.Errorf("Build: Staging-Verzeichnis kann nicht kopiert werden: %w", err)
+	// 6. Meta-Datei lesen (falls vorhanden)
+	var sysInfo *meta.SysInfo
+	if opts.MetaFile != "" {
+		sysInfo, err = meta.ReadXML(opts.MetaFile)
+		if err != nil {
+			log.Warnf("Build: Warnung: meta.xml '%s' nicht lesbar, fahre ohne apt-Management fort: %v", opts.MetaFile, err)
+		}
 	}
-	log.Infof("Build: Staging-Verzeichnis nach '%s' kopiert", stagingDest)
 
-	// 7. Dockerfile schreiben
-	if err := WriteDockerfile(buildCtxDir, opts); err != nil {
-		return fmt.Errorf("Build: Dockerfile kann nicht geschrieben werden: %w", err)
+	// 7. Staging aufteilen: packaged → überspringen, Rest → _unpackaged/
+	unpackagedDir := filepath.Join(buildCtxDir, "_unpackaged")
+	if err := os.MkdirAll(unpackagedDir, 0755); err != nil {
+		return fmt.Errorf("Build: _unpackaged-Verzeichnis kann nicht erstellt werden: %w", err)
 	}
-	log.Infof("Build: Dockerfile geschrieben")
 
-	// 8. Docker build ausführen
+	var filePackages []meta.FilePackageEntry
+	if sysInfo != nil {
+		filePackages = sysInfo.FilePackages
+	}
+	if err := splitStaging(opts.StagingDir, unpackagedDir, filePackages); err != nil {
+		return fmt.Errorf("Build: Staging-Aufteilung fehlgeschlagen: %w", err)
+	}
+	log.Infof("Build: Staging aufgeteilt → _unpackaged/")
+
+	// 8. Dockerfile schreiben
+	if opts.CustomDockerfile != "" {
+		// User-Dockerfile verwenden
+		customContent, err := os.ReadFile(opts.CustomDockerfile)
+		if err != nil {
+			return fmt.Errorf("Build: Custom-Dockerfile '%s' nicht lesbar: %w", opts.CustomDockerfile, err)
+		}
+		destDockerfile := filepath.Join(buildCtxDir, "Dockerfile")
+		if err := os.WriteFile(destDockerfile, customContent, 0644); err != nil {
+			return fmt.Errorf("Build: Dockerfile kopieren fehlgeschlagen: %w", err)
+		}
+		if err := AppendUnpackagedCopy(destDockerfile); err != nil {
+			return fmt.Errorf("Build: COPY-Injection fehlgeschlagen: %w", err)
+		}
+		log.Infof("Build: Custom-Dockerfile verwendet, _unpackaged/ injiziert")
+	} else {
+		// Dockerfile auto-generieren
+		params := DockerfileParams{
+			BaseImage:     opts.BaseImage,
+			Entrypoint:    opts.Entrypoint,
+			HasUnpackaged: true,
+			LibPath:       defaultLibPath("x86_64"),
+		}
+
+		if sysInfo != nil {
+			params.BaseImage = ResolveBaseImage(sysInfo.Distro)
+			params.Release = debianRelease(params.BaseImage)
+
+			log.Infof("Build: Löse Pakete auf (Standard-Repo + Snapshot)...")
+			split, splitErr := SplitPackages(sysInfo.Packages, params.Release)
+			if splitErr != nil {
+				log.Warnf("Build: Warnung: Paket-Auflösung fehlgeschlagen, fahre ohne apt fort: %v", splitErr)
+			} else {
+				params.Standard = split.Standard
+				params.Snapshot = split.Snapshot
+				params.SnapshotDate = split.SnapshotDate
+				log.Infof("Build: %d Standard-Pakete, %d Snapshot-Pakete, %d übersprungen",
+					len(split.Standard), len(split.Snapshot), len(split.Skipped))
+			}
+		}
+
+		if err := WriteDockerfile(buildCtxDir, params); err != nil {
+			return fmt.Errorf("Build: Dockerfile kann nicht geschrieben werden: %w", err)
+		}
+		log.Infof("Build: Dockerfile generiert")
+	}
+
+	// 9. docker build ausführen
 	log.Warnf("Build: Führe 'docker build -t %s %s' aus...", opts.Tag, buildCtxDir)
 	cmd := exec.Command("docker", "build", "-t", opts.Tag, buildCtxDir)
 	cmd.Stdout = os.Stdout
