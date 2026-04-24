@@ -20,6 +20,7 @@ import (
 func newRunCmd() *cobra.Command {
 	var outputFile, straceFile string
 	var baseImage, tag string
+	var customDockerfile string
 	var noDocker bool
 
 	cmd := &cobra.Command{
@@ -88,6 +89,15 @@ system metadata, and builds a Docker image — all in one step.`,
 			if err != nil {
 				log.Warnf("run: warning: failed to collect metadata: %v", err)
 			} else {
+				// Datei → Paket Zuordnung via dpkg -S
+				filePackages, fpErr := meta.CollectFilePackages(outputFile)
+				if fpErr != nil {
+					log.Warnf("run: warning: CollectFilePackages fehlgeschlagen: %v", fpErr)
+				} else {
+					sysInfo.FilePackages = filePackages
+					log.Infof("run: %d Dateien einem Paket zugeordnet", len(filePackages))
+				}
+
 				if err := meta.WriteXML(sysInfo, metaFile); err != nil {
 					log.Warnf("run: warning: failed to write metadata: %v", err)
 				} else {
@@ -104,6 +114,8 @@ system metadata, and builds a Docker image — all in one step.`,
 				dockerOpts.StagingDir = stagingDir
 				dockerOpts.Entrypoint = program
 				dockerOpts.AlpineWarning = true
+				dockerOpts.MetaFile = metaFile
+				dockerOpts.CustomDockerfile = customDockerfile
 
 				if err := docker.Build(dockerOpts); err != nil {
 					return fmt.Errorf("run: Docker build failed: %w", err)
@@ -128,6 +140,7 @@ system metadata, and builds a Docker image — all in one step.`,
 	cmd.Flags().StringVar(&baseImage, "base", "debian:bookworm-slim", "base Docker image")
 	cmd.Flags().StringVar(&tag, "tag", "cb_app", "Docker image tag")
 	cmd.Flags().BoolVar(&noDocker, "no-docker", false, "skip Docker image build")
+	cmd.Flags().StringVar(&customDockerfile, "dockerfile", "", "eigenes Dockerfile für den Docker-Build")
 
 	return cmd
 }
