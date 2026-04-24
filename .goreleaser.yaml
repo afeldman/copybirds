@@ -24,7 +24,63 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     files:
       - LICENSE
-      - CLAUDE.md
+      - README.md
+
+nfpms:
+  - package_name: copybirds
+    maintainer: Anton Feldmann <anton.feldmann@gmail.com>
+    description: Capture runtime file dependencies of Linux programs
+    homepage: https://github.com/afeldman/copybirds
+    license: Apache-2.0
+    formats: [deb]
+    bindir: /usr/bin
+
+dockers:
+  - image_templates:
+      - "ghcr.io/afeldman/copybirds:{{ .Tag }}-amd64"
+      - "ghcr.io/afeldman/copybirds:latest-amd64"
+    goarch: amd64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "ghcr.io/afeldman/copybirds:{{ .Tag }}-arm64"
+      - "ghcr.io/afeldman/copybirds:latest-arm64"
+    goarch: arm64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/afeldman/copybirds:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/afeldman/copybirds:{{ .Tag }}-amd64"
+      - "ghcr.io/afeldman/copybirds:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/afeldman/copybirds:latest"
+    image_templates:
+      - "ghcr.io/afeldman/copybirds:latest-amd64"
+      - "ghcr.io/afeldman/copybirds:latest-arm64"
+
+brews:
+  - repository:
+      owner: afeldman
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: https://github.com/afeldman/copybirds
+    description: Capture runtime file dependencies of Linux programs
+    license: Apache-2.0
+    install: |
+      bin.install "cb"
+
+nix:
+  - name: copybirds
+    repository:
+      owner: afeldman
+      name: nebula-nix
+      token: "{{ .Env.NIX_TOKEN }}"
+    homepage: https://github.com/afeldman/copybirds
+    description: Capture runtime file dependencies of Linux programs
+    license: "asl20"
 
 checksum:
   name_template: "checksums.txt"
