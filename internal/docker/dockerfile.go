@@ -4,37 +4,68 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
+
+	"copybirds/internal/meta"
 )
 
-// dockerfileTemplate ist das Go-Template für das Dockerfile.
-// Das staging/-Subverzeichnis im Build-Context enthält die Anwendungsdateien.
-// ldconfig wird in den Container kopiert, ist aber optional (scratch/busybox haben es nicht).
-const dockerfileTemplate = `FROM {{.BaseImage}}
-COPY staging/ /cb_root/
-RUN ldconfig 2>/dev/null || true
-ENV LD_LIBRARY_PATH=/cb_root/lib:/cb_root/usr/lib:/cb_root/usr/local/lib
-ENTRYPOINT ["/cb_root/{{.Entrypoint}}"]
-`
-
-// templateParams ist die interne Template-Datenstruktur
-type templateParams struct {
-	BaseImage   string
-	Entrypoint  string
+// DockerfileParams sind die Parameter für die Template-Generierung
+type DockerfileParams struct {
+	BaseImage     string
+	Standard      []meta.PackageInfo
+	Snapshot      []meta.PackageInfo
+	SnapshotDate  string // z.B. "20231015T000000Z"
+	Release       string // z.B. "bookworm"
+	HasUnpackaged bool
+	Entrypoint    string
+	LibPath       string
 }
 
-// WriteDockerfile schreibt das Dockerfile basierend auf den BuildOptions in buildCtxDir.
-func WriteDockerfile(buildCtxDir string, opts BuildOptions) error {
+const dockerfileTemplate = `FROM {{.BaseImage}}
+{{- if .Standard}}
+
+# Standard packages (exact version in official repo)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+{{- range $i, $p := .Standard}}
+    {{$p.Name}}={{$p.Version}}{{if not (isLast $i (pkgLen $.Standard))}} \{{end}}
+{{- end}}
+  && rm -rf /var/lib/apt/lists/*
+{{- end}}
+{{- if .Snapshot}}
+
+# Snapshot packages (version only available via snapshot.debian.org)
+RUN echo "deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/{{.SnapshotDate}} {{.Release}} main" \
+    > /etc/apt/sources.list.d/snapshot.list \
+  && apt-get update && apt-get install -y --no-install-recommends \
+{{- range $i, $p := .Snapshot}}
+    {{$p.Name}}={{$p.Version}}{{if not (isLast $i (pkgLen $.Snapshot))}} \{{end}}
+{{- end}}
+  && rm -rf /etc/apt/sources.list.d/snapshot.list \
+  && rm -rf /var/lib/apt/lists/*
+{{- end}}
+{{- if .HasUnpackaged}}
+
+# Non-packaged files (app data, configs, custom libs)
+COPY _unpackaged/ /
+{{- end}}
+
+ENV LD_LIBRARY_PATH={{.LibPath}}
+ENTRYPOINT ["/{{.Entrypoint}}"]
+`
+
+// WriteDockerfile schreibt das generierte Dockerfile in buildCtxDir.
+func WriteDockerfile(buildCtxDir string, params DockerfileParams) error {
 	dockerfilePath := filepath.Join(buildCtxDir, "Dockerfile")
 
-	tmpl, err := template.New("dockerfile").Parse(dockerfileTemplate)
-	if err != nil {
-		return fmt.Errorf("WriteDockerfile: Dockerfile-Template kann nicht geparst werden: %w", err)
+	funcMap := template.FuncMap{
+		"isLast": func(i, length int) bool { return i == length-1 },
+		"pkgLen": func(s []meta.PackageInfo) int { return len(s) },
 	}
 
-	params := templateParams{
-		BaseImage:  opts.BaseImage,
-		Entrypoint: opts.Entrypoint,
+	tmpl, err := template.New("dockerfile").Funcs(funcMap).Parse(dockerfileTemplate)
+	if err != nil {
+		return fmt.Errorf("WriteDockerfile: Template-Parse fehlgeschlagen: %w", err)
 	}
 
 	f, err := os.Create(dockerfilePath)
@@ -44,8 +75,33 @@ func WriteDockerfile(buildCtxDir string, opts BuildOptions) error {
 	defer f.Close()
 
 	if err := tmpl.Execute(f, params); err != nil {
-		return fmt.Errorf("WriteDockerfile: Template kann nicht ausgeführt werden: %w", err)
+		return fmt.Errorf("WriteDockerfile: Template-Ausführung fehlgeschlagen: %w", err)
 	}
 
 	return nil
+}
+
+// AppendUnpackagedCopy hängt die COPY-Zeile ans Ende eines user-eigenen Dockerfiles.
+func AppendUnpackagedCopy(dockerfilePath string) error {
+	f, err := os.OpenFile(dockerfilePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("AppendUnpackagedCopy: Dockerfile '%s' nicht öffenbar: %w", dockerfilePath, err)
+	}
+	defer f.Close()
+
+	_, err = fmt.Fprintln(f, "\n# Injected by cb: non-packaged files\nCOPY _unpackaged/ /")
+	return err
+}
+
+// defaultLibPath gibt den Standard-LD_LIBRARY_PATH für eine Architektur zurück
+func defaultLibPath(arch string) string {
+	archPaths := map[string]string{
+		"x86_64":  "/usr/lib/x86_64-linux-gnu:/usr/lib:/lib",
+		"aarch64": "/usr/lib/aarch64-linux-gnu:/usr/lib:/lib",
+		"arm64":   "/usr/lib/aarch64-linux-gnu:/usr/lib:/lib",
+	}
+	if p, ok := archPaths[strings.ToLower(arch)]; ok {
+		return p
+	}
+	return "/usr/lib:/lib"
 }
