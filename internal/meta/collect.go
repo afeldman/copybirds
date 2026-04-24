@@ -2,6 +2,8 @@ package meta
 
 import (
 	"bufio"
+	"encoding/xml"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -9,6 +11,16 @@ import (
 
 	"copybirds/internal/log"
 )
+
+// straceManifest ist ein minimaler Wrapper zum Lesen des Trace-Manifests
+type straceManifest struct {
+	XMLName xml.Name     `xml:"copybirds"`
+	Files   []straceFile `xml:"files>file"`
+}
+
+type straceFile struct {
+	Filename string `xml:"filename,attr"`
+}
 
 // Collect sammelt alle Systeminfos des aktuellen Systems
 func Collect(commandFile string) (*SysInfo, error) {
@@ -188,4 +200,49 @@ func collectCommands(path string) []string {
 		log.Warnf("collectCommands: Warnung: Fehler beim Lesen von '%s': %v", path, err)
 	}
 	return commands
+}
+
+// CollectFilePackages liest die Dateiliste aus dem Trace-Manifest und
+// ordnet jede Datei via 'dpkg -S' ihrem Debian-Paket zu.
+// Dateien die keinem Paket gehören werden nicht zurückgegeben.
+func CollectFilePackages(manifestFile string) ([]FilePackageEntry, error) {
+	data, err := os.ReadFile(manifestFile)
+	if err != nil {
+		return nil, fmt.Errorf("CollectFilePackages: Manifest '%s' nicht lesbar: %w", manifestFile, err)
+	}
+
+	var manifest straceManifest
+	if err := xml.Unmarshal(data, &manifest); err != nil {
+		return nil, fmt.Errorf("CollectFilePackages: XML-Parse fehlgeschlagen: %w", err)
+	}
+
+	var entries []FilePackageEntry
+	seen := make(map[string]bool)
+
+	for _, f := range manifest.Files {
+		path := f.Filename
+		if path == "" || seen[path] {
+			continue
+		}
+		seen[path] = true
+
+		out, err := exec.Command("dpkg", "-S", path).Output()
+		if err != nil {
+			// Datei gehört keinem Paket — überspringen
+			continue
+		}
+		// Output-Format: "packagename: /path/to/file"
+		line := strings.SplitN(strings.TrimSpace(string(out)), ":", 2)
+		if len(line) < 1 {
+			continue
+		}
+		pkgName := strings.TrimSpace(line[0])
+		if pkgName != "" {
+			entries = append(entries, FilePackageEntry{File: path, Package: pkgName})
+		}
+	}
+
+	log.Infof("CollectFilePackages: %d von %d Dateien einem Paket zugeordnet",
+		len(entries), len(manifest.Files))
+	return entries, nil
 }
